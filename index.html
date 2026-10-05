@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRON Staking Simulator</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #090b10;
+  color: white;
+}
+
+.app {
+  max-width: 480px;
+  margin: auto;
+  padding: 20px;
+}
+
+.header {
+  text-align: center;
+}
+
+.logo {
+  color: #ff3154;
+  font-size: 42px;
+  font-weight: 900;
+}
+
+h1 {
+  margin: 5px 0 18px;
+}
+
+.warning {
+  background: #24151a;
+  border: 1px solid #ff3154;
+  color: #ff8295;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 12px;
+  margin-bottom: 15px;
+}
+
+.card {
+  background: #12151c;
+  border: 1px solid #242936;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.label {
+  color: #929aaa;
+  font-size: 13px;
+}
+
+.big {
+  font-size: 29px;
+  font-weight: bold;
+  margin-top: 6px;
+}
+
+.apy {
+  color: #45e69b;
+  font-size: 28px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 12px;
+  border: 1px solid #303747;
+  background: #0b0e14;
+  color: white;
+  font-size: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .35;
+}
+
+.deposit {
+  background: #ff3154;
+  color: white;
+}
+
+.stake {
+  background: #19c982;
+  color: #06120d;
+}
+
+.unstake {
+  background: #ffad32;
+  color: #171006;
+}
+
+.withdraw {
+  background: #477dff;
+  color: white;
+}
+
+.reset {
+  background: #252b36;
+  color: white;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.stat {
+  background: #0d1016;
+  padding: 14px;
+  border-radius: 13px;
+}
+
+.value {
+  margin-top: 5px;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.earning {
+  color: #45e69b;
+}
+
+.timer {
+  text-align: center;
+  font-size: 32px;
+  font-weight: bold;
+  color: #ffad32;
+  margin-top: 15px;
+}
+
+.status {
+  color: #929baa;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <div class="logo">TRX</div>
+    <h1>TRON Staking</h1>
+  </div>
+
+  <div class="warning">
+    ⚠️ SIMULACIJA — nema stvarnih uplata, isplata ni blockchain transakcija.
+  </div>
+
+  <div class="card">
+    <div class="label">Virtualni TRX saldo</div>
+    <div class="big" id="balance">0.000000 TRX</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Referentni APY</div>
+    <div class="apy">5.20%</div>
+
+    <div class="status">
+      APY se koristi samo za simulirani obračun.
+    </div>
+  </div>
+
+  <div class="card">
+
+    <div class="label">
+      Deposit virtualnog TRX-a
+    </div>
+
+    <input
+      id="depositAmount"
+      type="number"
+      min="0"
+      step="0.000001"
+      placeholder="Unesi TRX"
+    >
+
+    <button
+      class="deposit"
+      onclick="deposit()"
+    >
+      + Deposit TRX
+    </button>
+
+  </div>
+
+  <div class="card">
+
+    <div class="label">
+      Staking
+    </div>
+
+    <div class="stats">
+
+      <div class="stat">
+        <div class="label">Staked</div>
+        <div class="value" id="staked">
+          0.000000 TRX
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="label">APY</div>
+        <div class="value" id="stakeApy">
+          —
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Live Earnings</div>
+        <div class="value earning" id="earnings">
+          0.000000 TRX
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Ukupno zarađeno</div>
+        <div class="value earning" id="totalEarned">
+          0.000000 TRX
+        </div>
+      </div>
+
+    </div>
+
+    <button
+      class="stake"
+      id="stakeBtn"
+      onclick="stake()"
+    >
+      Stake
+    </button>
+
+    <button
+      class="unstake"
+      id="unstakeBtn"
+      onclick="unstake()"
+      disabled
+    >
+      Unstake
+    </button>
+
+    <div
+      id="timerBox"
+      style="display:none"
+    >
+      <div
+        class="timer"
+        id="timer"
+      >
+        10
+      </div>
+
+      <div class="status">
+        Simulirano otključavanje stakinga...
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="label">
+      Virtualna sredstva za withdraw
+    </div>
+
+    <div
+      class="big"
+      id="withdrawable"
+    >
+      0.000000 TRX
+    </div>
+
+    <button
+      class="withdraw"
+      onclick="withdraw()"
+    >
+      Withdraw
+    </button>
+
+    <div class="status">
+      Withdraw je samo simuliran.
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <button
+      class="reset"
+      onclick="resetSimulation()"
+    >
+      Obriši spremljenu simulaciju
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* ==============================
+   POSTAVKE
+============================== */
+
+const APY = 5.20;
+
+const STORAGE_KEY =
+  "tronStakingSimulator";
+
+let balance = 0;
+
+let staked = 0;
+
+let stakeStart = null;
+
+let stakeAPY = 0;
+
+let currentEarnings = 0;
+
+let totalEarned = 0;
+
+let unstaking = false;
+
+let countdownEnd = null;
+
+let countdownTimer = null;
+
+
+/* ==============================
+   FORMAT
+============================== */
+
+function formatTRX(number) {
+
+  return Number(number).toFixed(6) + " TRX";
+
+}
+
+
+/* ==============================
+   SAVE
+============================== */
+
+function saveData() {
+
+  const data = {
+
+    balance,
+
+    staked,
+
+    stakeStart,
+
+    stakeAPY,
+
+    currentEarnings,
+
+    totalEarned,
+
+    unstaking,
+
+    countdownEnd
+
+  };
+
+  localStorage.setItem(
+
+    STORAGE_KEY,
+
+    JSON.stringify(data)
+
+  );
+
+}
+
+
+/* ==============================
+   LOAD
+============================== */
+
+function loadData() {
+
+  const saved =
+    localStorage.getItem(STORAGE_KEY);
+
+  if (!saved) return;
+
+  try {
+
+    const data =
+      JSON.parse(saved);
+
+    balance =
+      Number(data.balance) || 0;
+
+    staked =
+      Number(data.staked) || 0;
+
+    stakeStart =
+      data.stakeStart || null;
+
+    stakeAPY =
+      Number(data.stakeAPY) || 0;
+
+    currentEarnings =
+      Number(data.currentEarnings) || 0;
+
+    totalEarned =
+      Number(data.totalEarned) || 0;
+
+    unstaking =
+      Boolean(data.unstaking);
+
+    countdownEnd =
+      data.countdownEnd || null;
+
+  } catch {
+
+    console.log(
+      "Greška pri učitavanju."
+    );
+
+  }
+
+}
+
+
+/* ==============================
+   UI
+============================== */
+
+function updateUI() {
+
+  document.getElementById(
+    "balance"
+  ).textContent =
+    formatTRX(balance);
+
+
+  document.getElementById(
+    "staked"
+  ).textContent =
+    formatTRX(staked);
+
+
+  document.getElementById(
+    "earnings"
+  ).textContent =
+    formatTRX(currentEarnings);
+
+
+  document.getElementById(
+    "totalEarned"
+  ).textContent =
+    formatTRX(totalEarned);
+
+
+  document.getElementById(
+    "withdrawable"
+  ).textContent =
+    formatTRX(balance);
+
+
+  document.getElementById(
+    "stakeApy"
+  ).textContent =
+    staked
+      ? stakeAPY.toFixed(2) + "%"
+      : "—";
+
+
+  document.getElementById(
+    "stakeBtn"
+  ).disabled =
+    balance <= 0 ||
+    staked > 0 ||
+    unstaking;
+
+
+  document.getElementById(
+    "unstakeBtn"
+  ).disabled =
+    staked <= 0 ||
+    unstaking;
+
+}
+
+
+/* ==============================
+   DEPOSIT
+============================== */
+
+function deposit() {
+
+  const input =
+    document.getElementById(
+      "depositAmount"
+    );
+
+  const amount =
+    parseFloat(input.value);
+
+
+  if (!amount || amount <= 0) {
+
+    alert(
+      "Unesi ispravan iznos TRX-a."
+    );
+
+    return;
+
+  }
+
+
+  balance += amount;
+
+  input.value = "";
+
+  saveData();
+
+  updateUI();
+
+}
+
+
+/* ==============================
+   STAKE
+============================== */
+
+function stake() {
+
+  if (
+    balance <= 0 ||
+    staked > 0 ||
+    unstaking
+  ) {
+
+    return;
+
+  }
+
+
+  staked = balance;
+
+  balance = 0;
+
+  stakeStart = Date.now();
+
+  stakeAPY = APY;
+
+  currentEarnings = 0;
+
+  saveData();
+
+  updateUI();
+
+}
+
+
+/* ==============================
+   LIVE EARNINGS
+============================== */
+
+function updateEarnings() {
+
+  if (
+    !stakeStart ||
+    staked <= 0 ||
+    unstaking
+  ) {
+
+    return;
+
+  }
+
+
+  const elapsedSeconds =
+
+    (Date.now() - stakeStart) / 1000;
+
+
+  const secondsPerYear =
+
+    365 *
+    24 *
+    60 *
+    60;
+
+
+  currentEarnings =
+
+    staked *
+    (stakeAPY / 100) *
+    (elapsedSeconds / secondsPerYear);
+
+
+  saveData();
+
+  updateUI();
+
+}
+
+
+/* ==============================
+   UNSTAKE
+============================== */
+
+function unstake() {
+
+  if (
+    staked <= 0 ||
+    unstaking
+  ) {
+
+    return;
+
+  }
+
+
+  updateEarnings();
+
+
+  unstaking = true;
+
+
+  countdownEnd =
+    Date.now() + 10000;
+
+
+  saveData();
+
+
+  document.getElementById(
+    "timerBox"
+  ).style.display = "block";
+
+
+  startCountdown();
+
+  updateUI();
+
+}
+
+
+/* ==============================
+   COUNTDOWN
+============================== */
+
+function startCountdown() {
+
+  clearInterval(
+    countdownTimer
+  );
+
+
+  countdownTimer =
+
+    setInterval(() => {
+
+      const remaining =
+
+        Math.ceil(
+          (countdownEnd - Date.now()) / 1000
+        );
+
+
+      if (remaining <= 0) {
+
+        finishUnstake();
+
+        return;
+
+      }
+
+
+      document.getElementById(
+        "timer"
+      ).textContent =
+        remaining;
+
+    }, 250);
+
+}
+
+
+/* ==============================
+   FINISH UNSTAKE
+============================== */
+
+function finishUnstake() {
+
+  clearInterval(
+    countdownTimer
+  );
+
+
+  balance +=
+    staked + currentEarnings;
+
+
+  totalEarned +=
+    currentEarnings;
+
+
+  staked = 0;
+
+  currentEarnings = 0;
+
+  stakeStart = null;
+
+  stakeAPY = 0;
+
+  unstaking = false;
+
+  countdownEnd = null;
+
+
+  document.getElementById(
+    "timerBox"
+  ).style.display = "none";
+
+
+  saveData();
+
+  updateUI();
+
+}
+
+
+/* ==============================
+   WITHDRAW
+============================== */
+
+function withdraw() {
+
+  if (balance <= 0) {
+
+    alert(
+      "Nema virtualnog TRX-a za withdraw."
+    );
+
+    return;
+
+  }
+
+
+  const amount = balance;
+
+  balance = 0;
+
+  saveData();
+
+  updateUI();
+
+
+  alert(
+
+    "SIMULIRANI WITHDRAW\n\n" +
+
+    "Iznos: " +
+
+    amount.toFixed(6) +
+
+    " TRX\n\n" +
+
+    "Nema stvarne blockchain transakcije."
+
+  );
+
+}
+
+
+/* ==============================
+   RESET
+============================== */
+
+function resetSimulation() {
+
+  if (
+    !confirm(
+      "Obrisati sve spremljene podatke?"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  localStorage.removeItem(
+    STORAGE_KEY
+  );
+
+
+  location.reload();
+
+}
+
+
+/* ==============================
+   START
+============================== */
+
+loadData();
+
+updateUI();
+
+
+/*
+  Ako je korisnik zatvorio stranicu
+  tijekom unstakea, nastavljamo timer.
+*/
+
+if (
+  unstaking &&
+  countdownEnd
+) {
+
+  if (
+    Date.now() >= countdownEnd
+  ) {
+
+    finishUnstake();
+
+  } else {
+
+    document.getElementById(
+      "timerBox"
+    ).style.display = "block";
+
+    startCountdown();
+
+  }
+
+}
+
+
+setInterval(
+  updateEarnings,
+  1000
+);
+
+</script>
+
+</body>
+</html>
